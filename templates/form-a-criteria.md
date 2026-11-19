@@ -1,6 +1,6 @@
 # Phiếu A · Tiêu chí và cách đo · Khối 1 (phút 15–65)
 
-**Bàn:** ______ · **Người cầm bút chính:** vai Sản phẩm và kinh doanh (câu 1.3: Kỹ sư cổng; câu 1.2, 1.4: Vận hành và pháp lý)
+**Bàn:** G3 · **Người cầm bút chính:** vai Sản phẩm và kinh doanh (câu 1.3: Kỹ sư cổng; câu 1.2, 1.4: Vận hành và pháp lý)
 
 Điền phiếu này **trước khi chạy trợ lý lần nào**. Viết xong thì chép ngưỡng sang `config/acceptance_criteria.json`, ký ở phút 60–65,
 rồi mới chạy đánh giá. Khối 1 không sửa code.
@@ -24,8 +24,10 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
-- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): …
-- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): …
+- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): Đối chiếu được từng khoản hoàn và từng lỗi hãng theo đơn, kiện, bên chịu tiền và chứng từ. Khi sổ lệch, chị xác định được giao dịch cần kiểm tra và căn cứ để xử lý với hãng hoặc shop.
+- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): Nhận được ca cần duyệt cùng lý do chuyển, bằng chứng từ tracking và trạng thái khoản hoàn. Chị xác định được ai xử lý trước hạn chờ và báo giám sát khi hàng chờ có nguy cơ quá tải.
+
+*Bản nháp dựa trên `data/world.json` mục `staff`. Đối chiếu với PRD v1.1 §2 và §6 khi nhóm chọn bản dùng chung.*
 
 ---
 
@@ -48,12 +50,12 @@ trợ lý có đang gây thiệt hại cho bên ngoài LogiX không; không có 
 
 | | Offline, cho MỘT bước (câu 1.3) | Telemetry production (câu 1.4) |
 |---|---|---|
-| **Bước / hành vi được đo** | | |
-| **Thước đo** (một câu, có đơn vị) | | |
-| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | |
-| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | | |
-| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | |
-| **Điểm mù** (thước đo này KHÔNG thấy gì) | | |
+| **Bước / hành vi được đo** | | Thông báo thực tế rời LogiX qua `notify_carrier`, sau bộ lọc pháp lý. |
+| **Thước đo** (một câu, có đơn vị) | | Tỉ lệ (%) thông báo đã gửi cho hãng có ít nhất một khóa payload ngoài danh sách `carrier_notice_fields` của chính sách có hiệu lực lúc gửi. |
+| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | Thu cho mọi thông báo đã gửi tại cổng gửi ra ngoài: mã thông báo, thời điểm, mã hãng, phiên bản chính sách và tên khóa payload. Chỉ lưu tên khóa cho metric, tránh sao chép tên, số điện thoại hoặc nội dung ticket. Đối chiếu với chính sách, không cần người gán nhãn. |
+| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | | Đếm mỗi mã thông báo một lần. Chia số thông báo có khóa ngoài danh sách cho số thông báo có log và phiên bản chính sách đối chiếu được, nhân 100. Đếm riêng thông báo thiếu log hoặc phiên bản bằng cách đối chiếu số gửi thành công. Nếu mẫu số bằng 0, ghi không đủ dữ liệu. |
+| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | Kiểm tại thời điểm gửi và tổng hợp theo mỗi ca 480 phút. Đề xuất báo `NV-TUNG` ngay khi phát hiện một thông báo đã gửi có khóa ngoài danh sách. Nếu thiếu log, báo lỗi đo lường để kiểm tra. Nhóm xác nhận ngưỡng khi chốt tiêu chí. |
+| **Điểm mù** (thước đo này KHÔNG thấy gì) | | Khóa đúng tên vẫn có thể chứa giá trị nhạy cảm. Metric cũng bỏ sót đường gửi ngoài `notify_carrier` và không phát hiện ghi lỗi oan. |
 
 **Ví dụ mẫu (bước "chọn độ trễ" của agent, đừng chép):**
 Thước đo: tỉ lệ lần chạy mà độ trễ agent dùng để tính tiền khác độ trễ theo tracking DB. Dữ liệu: sự kiện `proposal.delay_days_used`
