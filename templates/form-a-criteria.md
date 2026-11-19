@@ -211,3 +211,5 @@ git add config/acceptance_criteria.json config/acceptance_criteria.lock && git c
 | Đã push lên `origin main` thành công? | Có. Đã đối chiếu commit ký trên GitHub. |
 
 Sau bước này **không sửa** `config/acceptance_criteria.json`, kể cả mở rồi lưu lại bằng trình soạn thảo tự định dạng.
+
+**Ghi chú về cảnh báo của `check_submission` ("file tiêu chí đã bị commit thêm sau commit ký").** Lệnh này báo 1 mục THIẾU, và nhóm giữ nguyên lịch sử git, không viết lại. Nguyên nhân: nhóm có **hai commit cùng message** `Sign acceptance criteria`: `1354c4d` (ký thật, 15:41:12) và `f07df1a` (merge commit của Thành viên 3, 15:41:33), và merge `7ad5788` (15:40:11, "Merge product and operations drafts before criteria signing") nằm trên nhánh `main`, không phải tổ tiên của `1354c4d`, nên lệnh `git log 1354c4d..HEAD` liệt kê nó là commit "chạm" vào file tiêu chí. **Nội dung tiêu chí không đổi sau lần ký:** `git diff 1354c4d HEAD -- config/acceptance_criteria.json` trống, hash `2eafbcfc` khớp với `config/acceptance_criteria.lock`, và `python3 -m lab10.criteria verify` báo khớp. Mục `criteria` ✅ trong `lab10.grade` cũng xác nhận điều này.

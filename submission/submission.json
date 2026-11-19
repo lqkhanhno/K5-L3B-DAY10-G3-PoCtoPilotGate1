@@ -5,12 +5,12 @@
     "VuDinhThang-2A202603753",
     "LeQuocKhanh-2A202603742"
   ],
-  "incident": "",
-  "decision_v1": "",
-  "decision_v2": "",
+  "incident": "S3",
+  "decision_v1": "Thu hẹp",
+  "decision_v2": "Thu hẹp",
   "three_lines": {
-    "environment_assumption": "",
-    "reduce_or_prevent": "",
-    "measure_in_pilot": ""
+    "environment_assumption": "Thiết kế giả định rằng trường `delay_cause` do hãng và tài xế nhập là đầy đủ và trung thực, và chính sách đang hiệu lực suy ra đúng từ ngày, nhưng thực tế hãng bị phạt có lợi khi để trống hoặc khai bão, nên cổng tin tracking vẫn có thể bị đánh lừa.",
+    "reduce_or_prevent": "Gate ngăn được hai nhánh (áp chính sách cũ, ghi lỗi hãng cho kiện bão hoặc nguyên nhân trống) vì cổng đọc nguồn sự thật chứ không đọc chữ khách; nhưng với lỗi hãng vượt trần trong ngày gate chỉ giảm tác hại tổng, vì chuyển cả khoản hoàn sang người nên tốn thêm chi phí (6.038đ/ticket).",
+    "measure_in_pilot": "Đo lại tỉ lệ kiện có `delay_cause` trống hoặc sai theo từng hãng, số ca chạm trần 2 lỗi/hãng/ngày cùng chi phí và ROI khi ca chuyển người nhiều, và chi phí nhóm kho `?` với mẫu lớn hơn 5 lần chạy."
   }
 }
