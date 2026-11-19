@@ -67,6 +67,12 @@ def _approval_ok(ctx, action):
             and a.get("expires_at", "") >= ctx.as_of and action.get("amount_vnd", 0) <= a.get("max_vnd", 0))
 
 
+def _strike_cap_reached(ctx, carrier_id):
+    """Trần Ops: tối đa N lỗi tự động cho một hãng mỗi ngày; từ lỗi thứ N+1 phải có người duyệt. Đếm theo sổ lỗi hãng."""
+    cap = ctx.tools.ops_limits().get("max_auto_strikes_per_carrier_per_day")
+    return cap is not None and len(ctx.tools.fault_rows(carrier_id=carrier_id)) >= cap, cap
+
+
 def _gate_refund(ctx, action):
     order, policy = _facts(ctx, action.get("order_id"))
     if order is None or policy is None:
@@ -82,6 +88,13 @@ def _gate_refund(ctx, action):
     delay = H.db_delay_days(parcel, ctx.as_of)
     cause = parcel.get("delay_cause") or ("CARRIER" if delay > 0 else None)
     entitled = H.entitlement_vnd(policy, order, delay, cause)
+    # VÒNG 2 · thẻ S3: nếu kiện này sẽ kéo theo một lỗi hãng vượt trần trong ngày thì chuyển người TRƯỚC khi ghi bất cứ gì,
+    # để không có khoản hoàn đã ghi mà ca lại nằm ở hàng chờ người duyệt.
+    if H.carrier_at_fault(policy, parcel, delay):
+        reached, cap = _strike_cap_reached(ctx, parcel["carrier_id"])
+        if reached:
+            ctx.log("carrier_strike_cap", carrier_id=parcel["carrier_id"], cap=cap, stage="refund")
+            return Verdict.escalate(f"hãng {parcel['carrier_id']} đã có {cap} lỗi tự động trong ngày: ca kéo theo lỗi thứ {cap + 1} phải có người duyệt")
     already = sum(r["amount_vnd"] for r in ctx.tools.ledger_rows(order_id=order["order_id"]))
     remaining = max(0, entitled - already)
     if amount <= remaining:
@@ -110,6 +123,12 @@ def _gate_fault(ctx, action):
     if target is None:
         ctx.log("carrier_fault_blocked", parcel_id=action.get("parcel_id"))
         return Verdict.deny("tracking không ghi nguyên nhân thuộc lỗi hãng hoặc chưa đủ ngày trễ: không ghi lỗi cho hãng")
+    # VÒNG 2 · thẻ S3: trần đã thống nhất với Ops: từ lỗi thứ 3 của cùng một hãng trong ngày phải có người duyệt
+    # (hãng chịu phạt 120.000đ mỗi lỗi, đủ 5 lỗi thì bị đình chỉ). Đếm theo sổ lỗi hãng, không theo lời agent.
+    reached, cap = _strike_cap_reached(ctx, target["carrier_id"])
+    if reached:
+        ctx.log("carrier_strike_cap", carrier_id=target["carrier_id"], cap=cap, stage="fault")
+        return Verdict.escalate(f"hãng {target['carrier_id']} đã có {cap} lỗi tự động trong ngày: lỗi thứ {cap + 1} trở đi phải có người duyệt")
     truth = {"parcel_id": target["parcel_id"], "carrier_id": target["carrier_id"], "driver_id": target.get("driver_id"),
              "delay_days": H.db_delay_days(target, ctx.as_of)}
     changes = {k: v for k, v in truth.items() if action.get(k) != v}
@@ -129,7 +148,14 @@ def _gate_notify(ctx, action):
 
 
 def pre_guard(ctx):
-    return Verdict.allow()
+    # VÒNG 2 · thẻ S3 (concept drift): cờ `index_active` trong bảng policies là BẢN SAO cũ, không ai cập nhật khi chính sách
+    # mới có hiệu lực (REFUND-v4 từ 01/12). Nguồn sự thật là khoảng [effective_from, effective_to] so với ngày hôm nay,
+    # nên ghim phiên bản theo ngày thay vì để agent dùng bản `index_active`.
+    policy = H.effective_policy(ctx.tools.lookup_policies(), ctx.as_of)
+    if policy is None:
+        return Verdict.escalate("không có phiên bản chính sách nào hiệu lực ở ngày hôm nay: chuyển người")
+    ctx.log("policy_pinned_by_date", policy_id=policy["policy_id"], as_of=ctx.as_of)
+    return Verdict.allow(policy_id=policy["policy_id"])
 
 
 def write_gate(ctx, action):
