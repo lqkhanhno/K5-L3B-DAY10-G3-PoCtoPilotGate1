@@ -20,20 +20,37 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.1 · Một mục tiêu cấp hệ thống (khác "model trả lời đúng")
 
-> Mỗi yêu cầu hoàn phí giao trễ ở depot pilot được **khép trọn vòng** (tra đơn và tracking → áp đúng phiên bản chính sách
-> đang hiệu lực → ghi sổ cái → ghi lỗi hãng → báo hãng → trả lời khách) **mà không để lại một dòng sổ cái hay một lỗi hãng nào
-> không có căn cứ trong tracking DB**; ca nào trợ lý không chắc thì được chuyển sang người duyệt và có người nhận trong 60 phút
-> (`ops_limits.review_sla_minutes`), với tổng chi phí mỗi ticket thấp hơn làm tay (10.000đ, `ops_facts.manual_cost_per_ticket_vnd`).
+*Tài liệu chung của bàn: PRD v1.1 và eval card của Lab 9, chép nguyên vào [`lab9_refs/`](../lab9_refs/) (baseline Lab 9
+`E-swarm-20261118-9a4e`, eval owner Vu Dinh Thang).*
+
+> **Mọi đồng tiền trợ lý chuyển đi đều có căn cứ trong nguồn sự thật, và mọi điều trợ lý nói hay ghi ra đều khớp sổ cái.**
+> Mục tiêu này không nói về một câu trả lời, mà nói về cả luồng tra đơn → áp chính sách → ghi sổ cái → ghi lỗi hãng → báo hãng
+> → trả lời khách.
+> - Gốc từ PRD v1.1 §3, hai dòng chặn release không có ngoại lệ: `approval_bypass = 0` (không khoản hoàn nào thiếu phê duyệt hợp
+>   lệ của đúng claim) và `reply_matches_ledger = 1.0` (mọi số tiền nói với khách đúng bằng số trong sổ cái).
+> - Day 10 mở rộng căn cứ đó sang **bên thứ ba**: mọi lỗi ghi cho hãng phải khớp `delay_cause` trong tracking. Đây đúng là lỗi
+>   FM-03 "tin ticket hơn DB" mà Lab 9 thấy ở seed 55. Day 10 cũng mở rộng sang **vận hành**: ca không chắc thì chuyển người và có
+>   người nhận trong 60 phút (`ops_limits.review_sla_minutes`); chi phí mỗi ticket thấp hơn làm tay (10.000đ,
+>   `ops_facts.manual_cost_per_ticket_vnd`).
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
 - Chị Oanh (`NV-OANH`), kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): **đối soát tuần không
-  còn dòng nào "không giải thích được"**: mỗi dòng hoàn tiền trong sổ cái có `basis` (chính sách hay phê duyệt) và `approval_id`
-  hợp lệ khi vượt hạn mức; mỗi lỗi ghi cho hãng khớp `delay_cause = CARRIER` của đúng kiện (`parcel_id`) trong tracking. Như vậy
-  chị không phải hoàn lại tiền phạt cho hãng (GHSH 150.000đ/lỗi, VNX 100.000đ/lỗi…) sau khi hãng khiếu nại.
-- Chị Hạnh (`NV-HANH`), trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): **mỗi ca chuyển sang đều đáng chuyển và đọc nhanh
-  được**: có một dòng giải thích vì sao chuyển (độ trễ theo tracking, chính sách, số tiền đề xuất), số ca chuyển không vượt sức
-  một người duyệt (6 ca/giờ, `ops_facts.review_capacity_per_reviewer_per_hour`) để không ca nào chờ quá 60 phút.
+  còn dòng nào "không giải thích được"**.
+  - Mỗi dòng hoàn tiền có `basis` (chính sách hay phê duyệt). Khoản vượt hạn mức có `approval_id` còn hạn, đúng claim (PRD §2:
+    "mọi khoản hoàn cần approval còn hạn của đúng claim"; FM-07 hoàn nhầm claim anh em).
+  - Mọi số tiền báo khách khớp sổ cái (PRD §3 `reply_matches_ledger`, FM-08).
+  - Mỗi lỗi ghi cho hãng khớp `delay_cause = CARRIER` của đúng kiện. Như vậy chị không phải trả lại tiền phạt cho hãng (GHSH
+    150.000đ/lỗi, VNX 100.000đ/lỗi) sau khi hãng khiếu nại.
+- Chị Hạnh (`NV-HANH`), trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): **chỉ nhận đúng những ca đáng chuyển, và đọc nhanh
+  được**.
+  - Đáng chuyển là ca ngoài phạm vi theo PRD §2: nhiều đơn, tranh chấp pháp lý, khách không phải chủ đơn, cộng các ca vượt hạn
+    mức tự động.
+  - Mỗi ca có một dòng giải thích (độ trễ theo tracking, chính sách, số tiền đề xuất).
+  - Số ca không vượt sức một người duyệt (6 ca/giờ, `ops_facts.review_capacity_per_reviewer_per_hour`) để không ca nào chờ quá
+    60 phút.
+  - PRD §6 nêu rõ Lab 9 **chưa có dữ liệu người dùng thật**. Chị Hạnh chính là người đầu tiên thấy lỗi thật của pilot, nên ca
+    chuyển sang chị cũng là nguồn dữ liệu.
 
 ---
 
@@ -142,6 +159,10 @@ dao động ngẫu nhiên, nên chưa đủ căn cứ nói Y tốt hơn X (cũng
     là chi phí đã vượt trần hoặc có tiền hoàn sai ăn vào phần tiết kiệm.
   - `queue_stuck_max = 0`: SLA 60 phút đã thống nhất với Ops (`ops_limits.review_sla_minutes`); một ca bị ùn là một khách chờ quá hạn
     và một lần vi phạm cam kết với Ops, nên không chấp nhận ca nào.
+- **Nối với Lab 9.** PRD v1.1 §3 và eval card đặt `pass_rate ≥ 0.85`, `pass_5 ≥ 0.80` cho cổng release trên MockLLM. Gate 1 cho
+  chạy với khách và tiền thật nên bàn **siết** lên `pass_rate_min 0.93`, `pass_k_min 0.86`. Việc này đúng nguyên tắc ratchet
+  của eval card: "ngưỡng chỉ được siết". Ba chỉ số an toàn bằng 0 nối tiếp `approval_bypass = 0` / `secret_leak = 0` của Lab 9:
+  không có ngoại lệ, không waiver.
 - Ngày xem lại tiêu chí: **2026-11-30** (trước khi REFUND-v4 có hiệu lực ngày 2026-12-01: hạn mức tự động đổi 200.000đ → 100.000đ,
   bất khả kháng không còn ghi lỗi hãng) · Ai dự: **NV-TUNG (PIC), NV-HANH (người duyệt), NV-OANH (đối soát), vai Sản phẩm và kinh doanh của bàn**
   (ghi vào Phiếu B mục B8, dòng "Ngày quyết định lại").
