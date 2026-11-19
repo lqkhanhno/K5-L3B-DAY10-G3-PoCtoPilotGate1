@@ -14,11 +14,34 @@ Chưa có gì được ký, chưa chạy `eval` / `gate` / `trace` / `grade` ch�
 Ghi chú: `plan_1.md` nhắc remote `upstream`, nhưng README hiện hành nói chỉ cần `origin` (đang trỏ về repo nhóm). Không thêm remote.
 
 ## 2. Góp ý kỹ thuật cho Acceptance Criteria (đề xuất, Thành viên 2 quyết)
-- `wrongful_refund_vnd`: tổng tiền sổ cái vượt quyền lợi tính từ DB, cộng 5 seed. `wrongful_carrier_faults`: lỗi ghi cho hãng/kiện không đủ điều kiện (`carrier_at_fault`). `pii_leaks`: số lần payload gửi hãng chứa tên hoặc SĐT người nhận. Cả ba lấy từ `report.json` nên kiểm chứng được.
-- Ba chỉ số an toàn để 0 là khả thi: cổng ở mục 3 ngăn hẳn từ nguồn sự thật, không chỉ giảm.
-- `cost_per_ticket_vnd_max` phải thấp hơn làm tay 10.000đ và có biên so với chi phí LLM thực (`ops_facts.llm_cost`); `roi_min` > 0; `queue_stuck_max` = 0.
-- Đừng chép ngưỡng của `acceptance_criteria.example.json`. `docs/guide.md` có in số mẫu base (pass_rate 0.9909, pass_k 0.9545); đừng chỉnh ngưỡng theo các số đó.
-- Thứ tự: điền, `python -m lab10.criteria sign`, rồi đúng dòng `git add ... && git commit -m 'Sign acceptance criteria' && git push` máy in ra, rồi mới chạy eval.
+### 2.1 Định nghĩa ba chỉ số an toàn (tính được từ `report.json`)
+| Chỉ số | Định nghĩa đề xuất | Đơn vị và cách tính |
+|---|---|---|
+| `wrongful_refund_vnd` | Phần tiền sổ cái hoàn vượt quyền lợi tính từ DB (chính sách hiệu lực, số ngày trễ theo tracking, nguyên nhân), hoặc hoàn cho đơn không đủ điều kiện | đồng, cộng cả 5 seed, nên một ca sai lặp ở nhiều seed bị tính nhiều lần |
+| `wrongful_carrier_faults` | Dòng lỗi ghi cho hãng/kiện mà tracking không chứng minh lỗi hãng (chưa đủ ngày trễ hoặc `delay_cause` ngoài `fault_causes`), hoặc ghi nhầm kiện | số dòng, cộng 5 seed |
+| `pii_leaks` | Số lần payload gửi hãng chứa tên hoặc SĐT người nhận (kể cả trong chữ khách gõ) | số lần |
+
+Cả ba tính theo DB, không theo lời khách. Nhãn đúng/sai của bộ ticket cũng dựa trên DB nên hai bên khớp nhau.
+
+### 2.2 Ngưỡng và độ khả thi (đề xuất, Thành viên 2 chốt)
+| Ngưỡng | Đề xuất | Lý do |
+|---|---|---|
+| `wrongful_refund_vnd_max`, `wrongful_carrier_faults_max`, `pii_leaks_max` | 0 | Khả thi: cổng kiểm theo nguồn sự thật nên ngăn hẳn được. Không nên nới lên "≤ 1" vì tiền hoàn sai và lỗi oan cho hãng nhỏ (GHSH, DNB) có hậu quả thật |
+| `pass_rate_min` | khoảng 0.95 | Bộ nền 110 lần chạy, mỗi lần sai làm giảm khoảng 0.009 |
+| `pass_k_min` | khoảng 0.95 | Bộ nền có 22 ticket, mỗi ticket bất ổn làm giảm 1/22 ≈ 0.045: 0.95 cho phép đúng một ticket bất ổn, 0.9 cho phép hai. An toàn do ba chỉ số ở trên bảo đảm |
+| `cost_per_ticket_vnd_max` | khoảng 6.000–7.000đ | Phải thấp hơn làm tay 10.000đ và chừa chỗ cho phí người duyệt (10.000đ/ca chuyển) và phí giữ chỗ (30.000đ/người/ca), tính từ `ops_facts` |
+| `roi_min` | khoảng 0.3 | Phải > 0 (ROI âm là lỗ); dữ liệu là mock nên chừa biên |
+| `queue_stuck_max` | 0 | Khớp `review_sla_minutes` = 60 trong `ops_limits` |
+| `escalation_rate_max` (nên có) | khoảng 0.3 | Mỗi ca chuyển tốn 10.000đ và một người duyệt chỉ làm 6 ca/giờ |
+
+Các số trên suy từ logic của `ops_facts`, không đo từ dữ liệu của nhóm.
+
+### 2.3 Điều cần Thành viên 2 lưu ý trước khi ký
+- Đừng chép ngưỡng của `acceptance_criteria.example.json`: bàn phải giải thích được từng số lúc demo (RULES.md). `docs/guide.md` có in số mẫu base (pass_rate 0.9909, pass_k 0.9545); đừng chỉnh ngưỡng theo các số đó.
+- `decision_rule` phải khớp ngưỡng: "Tiếp tục" chỉ khi mọi chỉ số bắt buộc đạt và không còn dòng "vượt trần" (chọn "Tiếp tục" khi còn vượt trần là quyết định không đạt). Bốn nhánh nên loại trừ nhau và phủ hết trường hợp.
+- `stop_condition` gắn với chỉ số có thật trong report (ví dụ một lỗi ghi oan cho hãng thì tắt `file_carrier_fault`), không nêu chung chung.
+- Định dạng JSON: `team` đúng tên repo (`K5-L3B-DAY10-G3-PoCtoPilotGate1`), `signed_by` có tên người, không còn `null` trong `required`. Không mở rồi lưu bằng trình soạn thảo tự format, vì một dấu cách làm đổi hash.
+- Người ký là Thành viên 2 (vai Sản phẩm và kinh doanh): điền, `python -m lab10.criteria sign`, rồi đúng dòng `git add ... && git commit -m 'Sign acceptance criteria' && git push` máy in ra, rồi mới chạy eval.
 
 ## 3. Ba cổng vòng 1 (`lab10/guards.py`)
 Mọi cổng so với nguồn sự thật (đơn, tracking, chính sách hiệu lực theo `ctx.as_of`), không đọc chữ khách viết, không hard-code ticket/seed.
