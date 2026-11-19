@@ -222,7 +222,7 @@ Trạng thái: **Xong** (có bằng chứng) · **Chưa** · **Không áp dụng
 | 6 | Chi phí | Khối "kinh doanh và vận hành" của report: chi phí mỗi ticket so với làm tay, ROI, tiền LLM ticket đắt nhất; `config/operating_gates.json` mục `business` | So chi phí mỗi ticket với làm tay, ROI với ngưỡng đã ký và tiền LLM ticket đắt nhất với trần. | Chưa | Đã có đề xuất `business` ở B7.4. Chờ mã lần chạy để so chi phí và ROI. | Vũ Đình Thắng |
 | 7 | Vận hành | Runbook (Phiếu B mục B7.5–B7.6) + `config/operating_gates.json` mục `operations` (PIC, người duyệt, số người trực, điều kiện dừng, kênh báo tin) + metric trong `monitors.py` | Kiểm tra PIC, lịch trực, người duyệt, ngưỡng báo tin, kênh trực và đường xử lý ca tồn. | Chưa | Có bản nháp runbook. Chờ xác nhận ca trực và ngưỡng config. | Lê Quốc Khánh |
 | 8 | Con người, pháp lý | Bên thứ ba (hãng, tài xế, shop, người nhận quà, người đứng tên duyệt); `config/operating_gates.json` mục `legal`; thẻ S6, S7, S8 có mục riêng ở Phiếu C mục C3 | Kiểm tra payload gửi hãng và căn cứ ghi lỗi của đúng kiện. Xác định ai tiếp nhận khiếu nại. | Chưa | Có đề xuất trường lọc và người nhận ở B7.5. Chờ kiểm chứng. | Lê Quốc Khánh |
-| 9 | Quyết định | Câu tiêu chí (Phiếu A mục A4) + hash Bản tiêu chí đã ký + quyết định Gate 1 (Phiếu B mục B8, Phiếu C mục C12) | Quyết định phải trỏ đến báo cáo và dòng quy tắc đã ký. | Chưa | Chờ nhóm ký tiêu chí và chốt quyết định tại từng mốc. | Vũ Đình Thắng |
+| 9 | Quyết định | Câu tiêu chí (Phiếu A mục A4) + hash Bản tiêu chí đã ký + quyết định Gate 1 (Phiếu B mục B8, Phiếu C mục C12) | Quyết định phải trỏ đến báo cáo và dòng quy tắc đã ký. | Chưa | Đã xác minh commit ký `f07df1a` ở A5. Chờ báo cáo và quyết định tại B8, C12. | Vũ Đình Thắng |
 
 Ô "Chưa" có rủi ro cao → chuyển thành một dòng Risk register (Phiếu C mục C10).
 
@@ -318,7 +318,7 @@ Mỗi con số kèm một câu lý do, lấy từ `data/world.json` → `ops_lim
 | `business.daily_refund_cap_vnd` | `1000000` | Bằng 50% ngân sách hoàn tự động Finance cho phép (`ops_limits.daily_auto_refund_budget_vnd = 2.000.000đ`), vẫn gấp ~2,2 lần ước tính của TV2 về số hoàn tự động đúng của bộ nền (≈ 453.000đ/ngày, chưa tính T-008 đi bằng phê duyệt), nên không chặn ca đúng ngày thường nhưng chặn được ngày dồn ticket trước khi chạm trần Finance. |
 | `business.cost_budget_per_ticket_vnd` | `1500` | Đúng trần tiền LLM mỗi ticket đã thống nhất với Ops/Finance (`ops_limits.max_llm_cost_per_ticket_vnd = 1.500đ`); ticket dài vượt mức này thì chuyển người, vì đọc tiếp cũng không còn rẻ hơn đáng kể so với 10.000đ làm tay. |
 | `business.pilot_scope` (all / warehouse / percent) | `{"mode": "all"}` | Vòng 1 giữ cả 4 kho có ticket (HN 7, HCM 5, DN 5, CT 4 trên 22 ticket) để khối "theo kho và hãng" đo đủ mọi phân khúc; quyết định thu về 2 depot (ứng viên HN + HCM, 12/22 ticket ≈ 55%) chỉ đưa ra ở v1/v2 khi có số theo kho, không đoán trước. |
-| `business.roi_min` | `0.4` | Khớp `roi_min` trong dự thảo Bản tiêu chí: chi phí 7.000đ/ticket so với 10.000đ làm tay cho ROI ≈ 3.000 / 7.000 ≈ 0,43, nên ROI < 0,4 nghĩa là chi phí đã vượt trần hoặc tiền hoàn sai đang ăn vào phần tiết kiệm. |
+| `business.roi_min` | `0.4` | Khớp `roi_min` trong Bản tiêu chí đã ký ở A5: chi phí 7.000đ/ticket so với 10.000đ làm tay cho ROI ≈ 3.000 / 7.000 ≈ 0,43, nên ROI < 0,4 nghĩa là chi phí đã vượt trần hoặc tiền hoàn sai đang ăn vào phần tiết kiệm. |
 
 ### B7.5 · Câu 2.10 · Cổng con người, vận hành, pháp lý + Runbook phần 1–3
 

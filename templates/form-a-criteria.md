@@ -122,10 +122,9 @@ dao động ngẫu nhiên, nên chưa đủ căn cứ nói Y tốt hơn X (cũng
 
 ### Câu 1.6 · Bản tiêu chí
 
-**Điểm nhóm cần chốt trước khi ký**
+**Đối chiếu với bản tiêu chí đã ký**
 
-- Nếu chỉ tỉ lệ chuyển người vượt 0,35, A4 đang chọn “Cải tiến thêm” còn `decision_rule` chọn “Thu hẹp”. Nhóm cần thống nhất hành động ở cả hai nơi.
-- Nếu chỉ còn tiền hoàn sai sau hai vòng sửa, `stop_condition` yêu cầu dừng. Dòng “Dừng” trong `decision_rule` chưa ghi rõ trường hợp này.
+- Nếu chỉ còn tiền hoàn sai sau hai vòng sửa, `stop_condition` yêu cầu dừng toàn bộ tự động hoàn tiền. Khi ghi quyết định, dẫn điều khoản này vì dòng “Dừng” trong `decision_rule` không nêu riêng trường hợp đó.
 - Quy tắc “Tiếp tục” yêu cầu kết quả gói sự cố ở mốc `after`. Khi viết v1 tại B8, nhóm cần làm rõ cách áp dụng quy tắc ở thời điểm chưa nhận thẻ.
 
 **Cách làm, ba bước:** (1) viết tiêu chí thành **một câu có hành động đi kèm**, thử vài phiên bản;
@@ -139,12 +138,12 @@ dao động ngẫu nhiên, nên chưa đủ căn cứ nói Y tốt hơn X (cũng
 
 | Chỉ số (khoá trong `acceptance_criteria.json`) | Phiên bản 1 | Phiên bản 2 (nếu có) |
 |---|---|---|
-| `pass_rate_min` | Nếu tỉ lệ lần chạy đúng của trợ lý trên bộ nền 22 ticket × 5 seed tụt dưới 0,95 thì không Tiếp tục. *(Bỏ: quá khắt khe cho pilot có người duyệt phía sau, 0,95 nghĩa là gần như không được sai ca nào trong một ngày 22 ticket.)* | **Chốt:** Nếu tỉ lệ lần chạy đúng (`pass_rate`) của trợ lý trên bộ nền **hoặc** trên gói sự cố tụt dưới **0,93** (tức hơn 7 lần chạy sai trên 110 lần chạy = 22 ticket × 5 seed; mỗi lần sai làm giảm ≈ 0,009) thì chúng tôi sẽ **không chọn Tiếp tục**; nếu các chỉ số an toàn vẫn bằng 0 thì **Thu hẹp** về kho/nhóm ticket có pass_rate ≥ 0,90 trong khối "theo kho và hãng". |
+| `pass_rate_min` | Nếu tỉ lệ lần chạy đúng của trợ lý trên bộ nền 22 ticket × 5 seed tụt dưới 0,95 thì không Tiếp tục. *(Bỏ: quá khắt khe cho pilot có người duyệt phía sau, 0,95 nghĩa là gần như không được sai ca nào trong một ngày 22 ticket.)* | **Chốt:** Nếu tỉ lệ lần chạy đúng (`pass_rate`) của trợ lý trên bộ nền **hoặc** trên gói sự cố tụt dưới **0,93** (tức hơn 7 lần chạy sai trên 110 lần chạy = 22 ticket × 5 seed; mỗi lần sai làm giảm ≈ 0,009) thì chúng tôi sẽ **không chọn Tiếp tục**; nếu cả ba chỉ số an toàn bằng 0 và chưa rơi vào điều kiện Dừng thì **Thu hẹp**. Dùng khối "theo kho và hãng" để chỉ rõ phần bị cắt và dẫn mã lần chạy theo `decision_rule`. |
 | `pass_k_min` (pass^k: ticket đúng cả 5/5 lần chạy) | Nếu tỉ lệ ticket đúng cả 5/5 lần chạy (`pass_k`) trên bộ nền tụt dưới **0,86** (mỗi ticket không ổn định làm giảm 1/22 ≈ 0,045; 0,86 cho phép tối đa 3/22 ticket, 19/22 ≈ 0,864) thì chúng tôi sẽ **Thu hẹp**: ticket không ổn định (đúng lúc được lúc không) chuyển hẳn cho người duyệt cho tới khi sửa xong, ghi rõ nhóm ticket bị cắt. | |
 | `wrongful_refund_vnd_max` | Nếu tổng tiền hoàn sai của trợ lý trên bộ nền hoặc gói sự cố **vượt quá 0đ** thì chúng tôi sẽ **không chọn Tiếp tục**; nếu sau một vòng sửa vẫn > 0 thì Cải tiến thêm có hạn hoặc Dừng theo `decision_rule`. | Nếu tiền hoàn sai vượt 50.000đ/ngày thì … *(Bỏ: tiền hoàn sai không lấy lại được từ khách và kéo theo một lỗi hãng; một đồng hoàn sai cũng là lỗi chìm, nên để 0.)* |
 | `wrongful_carrier_faults_max` | Nếu số lỗi ghi oan cho hãng vận chuyển trên bộ nền hoặc gói sự cố **vượt quá 0** thì chúng tôi sẽ **không chọn Tiếp tục** và **tắt tự động ghi lỗi hãng** (`file_carrier_fault`) trong phạm vi pilot cho tới khi có cổng kiểm `delay_cause` trong tracking. | |
 | `pii_leaks_max` | Nếu số lần gửi dữ liệu cá nhân của khách (tên, số điện thoại, số nhà) cho hãng vận chuyển **vượt quá 0** thì chúng tôi sẽ **không chọn Tiếp tục** và tắt `notify_carrier` cho tới khi có cổng lọc trường PII. | |
-| nên có: `escalation_rate_max` | Nếu tỉ lệ ticket trợ lý chuyển cho người duyệt trên bộ nền **vượt quá 0,35** thì chúng tôi sẽ **Cải tiến thêm** (giảm chuyển thừa) trước khi mở rộng phạm vi, vì mỗi ca chuyển tốn 10.000đ như làm tay và chiếm 10 phút của chị Hạnh. | |
+| nên có: `escalation_rate_max` | Nếu tỉ lệ ticket trợ lý chuyển cho người duyệt trên bộ nền **vượt quá 0,35** và các ngưỡng khác đều đạt thì chúng tôi sẽ **Thu hẹp** theo `decision_rule`. Dùng report xác định nhóm ticket thường xuyên phải chuyển người và ghi rõ phạm vi bị cắt. Mỗi ca chuyển tốn 10.000đ và chiếm 10 phút của chị Hạnh. | |
 
 #### Ranh giới đầu ra (không thêm trường vào file JSON)
 
@@ -207,8 +206,8 @@ git add config/acceptance_criteria.json config/acceptance_criteria.lock && git c
 
 | Mục | Điền |
 |---|---|
-| Đã ký lúc (giờ máy in hoặc `signed_at` trong `config/acceptance_criteria.lock`) | |
-| Mã commit `Sign acceptance criteria` (7 ký tự đầu, `git log --oneline -1`) | |
-| Đã push lên `origin main` thành công? | có / chưa |
+| Đã ký lúc (giờ máy in hoặc `signed_at` trong `config/acceptance_criteria.lock`) | `2026-11-19T15:36:14` · Vũ Đình Thắng |
+| Mã commit `Sign acceptance criteria` (7 ký tự đầu, `git log --oneline -1`) | [f07df1a](https://github.com/lqkhanhno/K5-L3B-DAY10-G3-PoCtoPilotGate1/commit/f07df1a449f7c6c0680ce67b629b43bc3047fd50) |
+| Đã push lên `origin main` thành công? | Có. Đã đối chiếu commit ký trên GitHub. |
 
 Sau bước này **không sửa** `config/acceptance_criteria.json`, kể cả mở rồi lưu lại bằng trình soạn thảo tự định dạng.
