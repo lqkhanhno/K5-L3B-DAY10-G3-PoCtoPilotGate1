@@ -206,8 +206,10 @@ git add config/acceptance_criteria.json config/acceptance_criteria.lock && git c
 
 | Mục | Điền |
 |---|---|
-| Đã ký lúc (giờ máy in hoặc `signed_at` trong `config/acceptance_criteria.lock`) | `2026-11-19T15:36:14` · Vũ Đình Thắng |
-| Mã commit `Sign acceptance criteria` (7 ký tự đầu, `git log --oneline -1`) | [f07df1a](https://github.com/lqkhanhno/K5-L3B-DAY10-G3-PoCtoPilotGate1/commit/f07df1a449f7c6c0680ce67b629b43bc3047fd50) |
+| Đã ký lúc (giờ máy in hoặc `signed_at` trong `config/acceptance_criteria.lock`) | `2026-11-19T15:41:05` · Vũ Đình Thắng |
+| Mã commit `Sign acceptance criteria` (7 ký tự đầu, `git log --oneline -1`) | [1354c4d](https://github.com/lqkhanhno/K5-L3B-DAY10-G3-PoCtoPilotGate1/commit/1354c4dfc4b872abeba9479bd4e96ba4f5935b8a) |
 | Đã push lên `origin main` thành công? | Có. Đã đối chiếu commit ký trên GitHub. |
 
 Sau bước này **không sửa** `config/acceptance_criteria.json`, kể cả mở rồi lưu lại bằng trình soạn thảo tự định dạng.
+
+**Ghi chú về cảnh báo của `check_submission` ("file tiêu chí đã bị commit thêm sau commit ký").** Lệnh này báo 1 mục THIẾU, và nhóm giữ nguyên lịch sử git, không viết lại. Nguyên nhân: nhóm có **hai commit cùng message** `Sign acceptance criteria`: `1354c4d` (ký thật, 15:41:12) và `f07df1a` (merge commit của Thành viên 3, 15:41:33), và merge `7ad5788` (15:40:11, "Merge product and operations drafts before criteria signing") nằm trên nhánh `main`, không phải tổ tiên của `1354c4d`, nên lệnh `git log 1354c4d..HEAD` liệt kê nó là commit "chạm" vào file tiêu chí. **Nội dung tiêu chí không đổi sau lần ký:** `git diff 1354c4d HEAD -- config/acceptance_criteria.json` trống, hash `2eafbcfc` khớp với `config/acceptance_criteria.lock`, và `python3 -m lab10.criteria verify` báo khớp. Mục `criteria` ✅ trong `lab10.grade` cũng xác nhận điều này.

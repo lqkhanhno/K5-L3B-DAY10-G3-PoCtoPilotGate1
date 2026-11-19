@@ -1,0 +1,31 @@
+{
+  "_huong_dan": "Cổng kinh doanh, vận hành, pháp lý mà trợ lý PHẢI tuân theo. Bàn điền ở vòng 1, chốt bằng python3 -m lab10.checkpoint, rồi được sửa tiếp ở vòng 2. null = chưa đặt cổng này. Giải thích từng dòng: docs/guide.md, mục Cổng trong config (#ban-do).",
+  "business": {
+    "daily_refund_cap_vnd": 1000000,
+    "cost_budget_per_ticket_vnd": 1500,
+    "pilot_scope": {"mode": "all", "warehouses": [], "percent": 100},
+    "roi_min": 0.4
+  },
+  "operations": {
+    "pic": "NV-TUNG",
+    "approver_id": "NV-HANH",
+    "reviewers_on_shift": 1,
+    "review_capacity_per_hour": 6,
+    "max_queue_wait_minutes": 60,
+    "stop_conditions": [
+      "Khi có 1 lỗi ghi oan cho hãng (wrongful_carrier_faults > 0): NV-TUNG tắt file_carrier_fault trong config/switches.json và giữ bằng chứng trace cho tới khi cổng kiểm delay_cause chạy lại sạch.",
+      "Khi xác nhận 1 lần gửi dữ liệu cá nhân cho hãng (pii_leaks > 0): NV-TUNG tắt notify_carrier, cách ly bản thông báo đã gửi; NV-OANH xử lý với hãng và người liên quan.",
+      "Khi tổng tiền hoàn sai vượt ngưỡng 0 đã ký (wrongful_refund_vnd > 0): tạm tắt issue_refund, mọi khoản hoàn chuyển NV-HANH duyệt tay cho tới khi đối soát xong.",
+      "Khi khoản hoàn tiếp theo làm vượt business.daily_refund_cap_vnd (1.000.000đ/ngày) hoặc ngân sách Finance 2.000.000đ/ngày (ops_limits.daily_auto_refund_budget_vnd): chuyển người duyệt và kiểm sổ trước khi ghi tiếp.",
+      "Khi có ca nào chờ người duyệt quá 60 phút (ops_limits.review_sla_minutes) hoặc số ca bị ùn > 0 (queue_stuck_max đã ký là 0): gọi người dự phòng; nếu 2 giờ liên tiếp vẫn ùn thì NV-TUNG cùng TV2 thu hẹp business.pilot_scope.",
+      "Khi chi phí mỗi ticket vượt 7.000đ hoặc ROI dưới 0,4 đã ký: dừng mở rộng phạm vi, cả bàn họp lại trước khi chạy tiếp."
+    ],
+    "alert_channel": "#ops-pilot-hoan-tien",
+    "decision_note": true,
+    "review_sampling_pct": 10
+  },
+  "legal": {
+    "pii_fields_blocked_to_third_party": ["customer_note", "recipient_contact"],
+    "carrier_fault_requires_recorded_cause": true
+  }
+}
