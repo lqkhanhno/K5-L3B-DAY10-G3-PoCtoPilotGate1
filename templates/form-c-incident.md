@@ -1,6 +1,6 @@
 # Phiếu C · Sự cố và quyết định v2 · Khối 3 (phút 125–200)
 
-**Bàn:** ______ · **Thẻ đã bốc:** ___ *(để trống tới phút 125; bốc số xong thì ghi đúng số đó, ví dụ `S3`. Lab Coach đối chiếu với sổ; lệnh tự kiểm tra in dòng này trong report.)*
+**Bàn:** K5-L3B-DAY10-G3-PoCtoPilotGate1 · **Thẻ đã bốc:** ___ *(để trống tới phút 125; bốc số xong thì ghi đúng số đó, ví dụ `S3`. Lab Coach đối chiếu với sổ; lệnh tự kiểm tra in dòng này trong report.)*
 
 Mở `incidents/Sx/card.md` của đúng số đã bốc. Các bước trên thẻ trỏ về đúng mục trong phiếu này. Mục C3 chỉ điền phần ứng với
 số thẻ của bàn; các phần khác để trống.
@@ -367,8 +367,14 @@ Vẽ lại cây ở C6. Ở mỗi nhánh đã xử lý, thêm một nút `VÀ [g
 
 ## C10 · Câu 3.7 · Risk register (thêm ít nhất 1 dòng sau sự cố)
 
+*Bốn dòng đầu ghi sẵn ở vòng 1 (chuyển từ các ô "Chưa" rủi ro cao của Phiếu B mục B5 và các lý do pre-mortem không thành cổng ở B6) để có nền so sánh. Sau khi nhận thẻ, bắt buộc thêm ít nhất một dòng mới từ sự cố.*
+
 | Rủi ro | Khả năng | Tác động | Người phụ trách (PIC, một người) | Dấu hiệu (metric nào, ngưỡng nào) | Xử lý | Ảnh hưởng bước đánh giá | Nhóm chức năng (GOVERN / MAP / MEASURE / MANAGE) |
 |---|---|---|---|---|---|---|---|
+| *(vòng 1)* Khoản hoàn ghi sổ dùng phê duyệt không hợp lệ (hết hạn, sai ticket) làm nhân viên mất tin trợ lý, quay lại kiểm tay 100% quyết định | Trung bình | Công suất duyệt giảm (1 lần kiểm lại tốn 1 ca thay vì 0,4 ca có ghi chú); chi phí/ticket tiến về 10.000đ, ROI tụt dưới 0,4 | Vũ Đình Thắng | Report dòng "kiểm lại … trust: chưa đạt"; sự kiện `refund_approval_invalid` trong trace | Cổng vòng 1 `_approval_ok` chuyển người mọi khoản vượt hạn mức thiếu phê duyệt hợp lệ; `NV-OANH` đối soát sổ mỗi ngày | `business_ops.cost_per_ticket_vnd_max = 7000`, `roi_min = 0.4` | MANAGE |
+| *(vòng 1)* Hãng nhỏ (GHSH, DNB: đình chỉ sau 3 lỗi/7 ngày) bị trừ phạt oan do ghi lỗi khi tracking không chứng minh lỗi hãng | Thấp sau cổng vòng 1 (cổng ngăn được nhánh); cao nếu tắt cổng | Phạt 150.000đ (GHSH) hoặc 80.000đ (DNB) mỗi lỗi oan; nguy cơ đình chỉ hãng → gián đoạn giao hàng | Lê Quốc Khánh | `wrongful_carrier_faults > 0`; sự kiện `carrier_fault_blocked` tăng bất thường trong trace | `legal.carrier_fault_requires_recorded_cause = true` + cổng `file_carrier_fault`; xác nhận 1 lỗi oan thì tắt công tắc (stop condition Runbook 3) | `required.wrongful_carrier_faults_max = 0` | MEASURE |
+| *(vòng 1)* Giờ cao điểm (ticket gấp 3) làm hàng chờ ùn, khách chờ quá SLA 60 phút | Trung bình (viết sẵn phương án ở B7.6) | `queue_stuck > 0` vi phạm ngưỡng đã ký; khách chờ quá hạn; phải làm tay tốn 10.000đ/ticket | Lê Quốc Khánh | `queue_wait_max_min` ≥ 30 phút (VÀNG), `queue_stuck` ≥ 1 (ĐỎ) | Gọi người dự phòng (+30.000đ/ca); kéo dài quá 2 giờ thì thu hẹp `business.pilot_scope` | `business_ops.queue_stuck_max = 0` | MANAGE |
+| *(vòng 1)* REFUND-v4 hiệu lực 2026-12-01 nhưng cờ `index_active` chưa đổi: hệ vẫn áp v3, ghi lỗi hãng cho kiện bão (FORCE_MAJEURE) và hoàn sai hạn mức tự động 200.000đ thay vì 100.000đ | Chắc chắn xảy ra nếu không ghim policy (chỉ 15 ngày sau `as_of`) | Hoàn thừa/thiếu theo bảng cũ; hãng bị ghi lỗi oan trong mùa bão; các ngưỡng đã ký so sai nền | Đoàn Đăng Khoa | Monitor đề xuất ở B3: tỉ lệ quyết định dùng `policy_id` ≠ chính sách hiệu lực theo ngày `as_of`; `wrongful_carrier_faults` | Ghim `policy_id` trong `pre_guard` (vòng 2); họp xem lại tiêu chí 2026-11-30 | `required.wrongful_refund_vnd_max`, `required.wrongful_carrier_faults_max` | MAP |
 | | | | | | | | |
 
 Quy tắc: **mỗi dòng phải đổi được một quyết định.** Cột "Dấu hiệu" phải là một metric có trong `monitors.py` hoặc trong report.
@@ -402,9 +408,9 @@ Ghi các dòng đổi sau sự cố. Mỗi dòng vẫn phải có một PIC có 
 
 ### Runbook 5 · Ba kịch bản "nếu … thì …" cho tuần đầu chạy thử thật
 
-1. Nếu số ticket tăng gấp ___ lần trong một giờ thì: …
-2. Nếu nhà cung cấp LLM lỗi quá ___ phút thì: …
-3. Nếu người duyệt báo không tin một quyết định của trợ lý thì: …
+1. Nếu số ticket tăng gấp **3** lần trong một giờ thì: `NV-HANH` gọi người dự phòng (`NV-TUNG`) ngay khi hàng chờ ≥ 3 ca hoặc ca chờ lâu nhất ≥ 30 phút; nếu đã thêm người mà vẫn dự báo vượt SLA 60 phút, `NV-TUNG` cùng TV2 thu hẹp `business.pilot_scope` (cắt kho có tải cao nhất), ticket ngoài phạm vi về CSKH làm tay (10.000đ/ticket); ghi giờ gọi và giờ quyết vào `#ops-pilot-hoan-tien` để đối chiếu với `operations.stop_conditions`.
+2. Nếu nhà cung cấp LLM lỗi **3 lần liên tiếp trong 30 phút** thì: mọi proposal rơi về `fail_open` đều bị cổng vòng 1 chuyển người (không tự ghi tiền, không tự ghi lỗi); `NV-TUNG` theo dõi sự kiện `llm_fallback`, không phục hồi trong 30 phút thì tắt `issue_refund` và `file_carrier_fault` theo Runbook 3 (hạn dừng 10 phút), trả lời khách thủ công; bật lại chỉ khi TV1 xác nhận trace đã sạch và ca tồn có người xử lý.
+3. Nếu người duyệt báo không tin một quyết định của trợ lý thì: ca đó chuyển làm tay ngay, `NV-OANH` đối soát khoản liên quan trong ngày; nếu trong ngày xuất hiện khoản dùng phê duyệt không hợp lệ hoặc ≥ 3 quyết định bị phản đối thì trust rơi về "chưa đạt" (kiểm tay 100%, mỗi lần tốn 1 ca thay vì 0,4 ca) — `NV-TUNG` họp cả bàn soát cổng, bật lại kiểm mẫu 10% chỉ khi `NV-HANH` xác nhận tin lại.
 
 ---
 

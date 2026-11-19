@@ -15,7 +15,7 @@ Họ tên đầy đủ và MSSV của **mọi** thành viên; bàn 3 người th
 | --: | --------- | ---- | --- | :---------: |
 |   1 | Đoàn Đăng Khoa | 2A202603766 | Kỹ sư cổng |  |
 |   2 | Vũ Đình Thắng | 2A202603753 | Sản phẩm và kinh doanh |  |
-|   3 | Lê Quốc Khánh | 2A202603742 | Vận hành và pháp lý | Có |
+|   3 | Lê Quốc Khánh | 2A202603742 | Vận hành và pháp lý |  |
 |   4 |           |      |     |             |
 
 Ghi `members` trong `submission/submission.json` theo dạng `"HoVaTen-MSSV"`, khớp bảng trên.
