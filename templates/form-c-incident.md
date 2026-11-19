@@ -412,20 +412,24 @@ Ghi các dòng đổi sau sự cố. Mỗi dòng vẫn phải có một PIC có 
 
 | # nhóm | Trạng thái mới (Xong / Chưa / Không áp dụng) | Bằng chứng mới (mã lần chạy, mục phiếu, số trong report) | PIC |
 |---|---|---|---|
-| | | | |
-| | | | |
+| 2 Dữ liệu | Chưa | C3.5 đã mở lại bản đồ dữ liệu: `index_active` là bản sao, `effective_from/to` là nguồn sự thật, `delay_cause` có thể trống, thêm `ops_limits` (trần lỗi hãng). Chờ TV2 xác nhận như B5 đã ghi. | Vũ Đình Thắng |
+| 4 Quyền hạn | Chưa | Thêm cổng `_strike_cap_reached`: từ lỗi hãng thứ 3 trong ngày chuyển người trước khi hoàn (`R-S3-after-20261119-170103-ea148f`, `carrier_strike_cap` trong trace `S3-42@11`). Còn như B5: chưa diễn tập tắt công tắc và `send_reply` chưa có cổng riêng. | Đoàn Đăng Khoa |
+| 5 Hiệu năng, hạ tầng | Chưa | Sau sửa, tỉ lệ chuyển người trên thẻ 0,3333 (ngưỡng 0,35), 0 ca ùn, 1 người trực · 6 ca/giờ (`R-S3-after-20261119-170542-c84928`). Chưa thử guideword INCAPABLE (LLM không trả lời). | Lê Quốc Khánh |
+| 6 Chi phí | Xong | Thẻ: 6.038đ/ticket (≤ 7.000đ), ROI 0,66 (≥ 0,4), LLM đắt nhất 771đ (≤ 1.500đ); bộ nền: 4.510đ, ROI 1,22. Giới hạn: nhóm kho `?` vẫn 10.359đ > làm tay (xem C12). | Vũ Đình Thắng |
+| 7 Vận hành | Xong | Monitor mới đã có (`unpinned_policy_rate`, `fault_on_unlicensed_cause_rate`, `carrier_days_over_strike_cap`, mục C8) và mã lần chạy chính thức (`R-S3-grade-20261119-170542-c84928`). Chưa diễn tập ca ùn thật. | Lê Quốc Khánh |
+| 9 Quyết định | Chưa | C12 đã có cột v2; còn chờ nhóm duyệt và chốt B8 (v1), điền ô 'PIC ký'. | Vũ Đình Thắng |
 
 ### Runbook 4 · Sau sự cố trên thẻ (vòng 2)
 
 | Câu hỏi | Trả lời |
 |---|---|
-| Tín hiệu nào ở Runbook 2 (Phiếu B mục B7.5) lẽ ra phải báo trước sự cố này? Nó đã có chưa? | |
-| Bàn thêm hoặc đổi ngưỡng nào, từ bao nhiêu thành bao nhiêu? | |
-| Bàn đổi gì về **người** (số người trực, ai đứng tên, ai được gọi)? | |
-| Bàn đổi gì về **phạm vi** hoặc **quy trình** (kiểm mẫu, ghi chú giải thích, trần)? | |
-| Nói gì với bên thứ ba bị ảnh hưởng (hãng, shop, người nhận, nhân viên duyệt), ai nói, trong bao lâu? | |
-| Dữ liệu cá nhân nào đã rời hệ thống mà không thu hồi được? Báo cho ai? | |
-| Sự cố lộ ra trước qua số máy đo, phản hồi của người, hay đọc nội dung? Nguồn nào bàn chưa có? | |
+| Tín hiệu nào ở Runbook 2 (Phiếu B mục B7.5) lẽ ra phải báo trước sự cố này? Nó đã có chưa? | Chưa có. Runbook 2 chỉ có `wrongful_carrier_faults` (đỏ khi đã xác nhận ghi oan, tức là hãng đã bị phạt). Tín hiệu báo trước là tỉ lệ ticket không được ghim chính sách theo ngày (`unpinned_policy_rate`) và số lỗi hãng một ngày vượt trần (`carrier_days_over_strike_cap`); hai chỉ số này vừa thêm ở `monitors.py` (C8). |
+| Bàn thêm hoặc đổi ngưỡng nào, từ bao nhiêu thành bao nhiêu? | Thêm hai dòng vào Runbook 2: `unpinned_policy_rate` bình thường 0, VÀNG > 0 (kiểm cờ `index_active` và ngày hiệu lực trong ngày), ĐỎ nếu kéo dài sang ngày sau (tắt `issue_refund`); `carrier_days_over_strike_cap` bình thường 0, VÀNG ≥ 1 (có hãng chạm trần 2 lỗi/ngày, NV-HANH duyệt từ lỗi thứ 3). `escalation_rate` thêm VÀNG ≥ 0,30 (thẻ sau sửa là 0,3333, ngưỡng đã ký 0,35). Chi phí mỗi ticket: giữ VÀNG > 6.000đ và ĐỎ > 7.000đ; thẻ sau sửa là 6.038đ nên đã vào VÀNG do ca chuyển người. Các ngưỡng này **chưa** ghi vào B7.5 và config; đề xuất, chờ nhóm duyệt. |
+| Bàn đổi gì về **người** (số người trực, ai đứng tên, ai được gọi)? | Không đổi số người trực (1 người · 6 ca/giờ, 0 ca ùn trong report). Đề xuất giao NV-HANH duyệt mọi lỗi hãng từ thứ 3 trong ngày; nếu hàng chờ ≥ 3 ca thì NV-TUNG gọi người dự phòng theo Runbook 2. |
+| Bàn đổi gì về **phạm vi** hoặc **quy trình** (kiểm mẫu, ghi chú giải thích, trần)? | Quy trình: chính sách do `pre_guard` ghim theo ngày hiệu lực, không theo `index_active`; trần 2 lỗi hãng/ngày áp bằng `_strike_cap_reached` (đọc từ `ops_limits`). Phạm vi và kiểm mẫu 10% trong `operating_gates.json` **chưa đổi** ở vòng này; việc cắt nhóm kho `?` để ở C12. |
+| Nói gì với bên thứ ba bị ảnh hưởng (hãng, shop, người nhận, nhân viên duyệt), ai nói, trong bao lâu? | Hãng Mekong Delta Ship: NV-HANH báo cho điều phối hãng trong 1 ngày làm việc rằng các lỗi ghi cho kiện bão hoặc kiện chưa ghi nguyên nhân từ 01/12 sẽ được rà và rút; gửi danh sách ticket từ sổ lỗi hãng. Khách trễ 2 ngày bị từ chối sai: CSKH liên hệ lại và hoàn theo REFUND-v4 (ví dụ S3-02: 18.000đ). |
+| Dữ liệu cá nhân nào đã rời hệ thống mà không thu hồi được? Báo cho ai? | Không có: `pii_leaks` bằng 0 ở cả ba mốc của thẻ (base, prepared, after). Thông báo gửi hãng chỉ có `order_id`, `parcel_id`, `district`, `delay_days`. |
+| Sự cố lộ ra trước qua số máy đo, phản hồi của người, hay đọc nội dung? Nguồn nào bàn chưa có? | Qua phản hồi của người bên thứ ba (tin Zalo của điều phối hãng) và ghi chú CSKH, không qua số máy đo. Bàn chưa có: kênh nhận khiếu nại của hãng gắn với `wrongful_carrier_faults`, và nguồn đối chiếu với phụ lục hợp đồng mới của hãng (hiện nằm ngoài DB). |
 
 ### Runbook 5 · Ba kịch bản "nếu … thì …" cho tuần đầu chạy thử thật
 
@@ -445,30 +449,30 @@ Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
 
 | | **v2** (phút 185–200, SAU sự cố) |
 |---|---|
-| Commit ký tiêu chí | phải giống v1 |
-| Hash chốt cổng vòng 1 | phải giống v1 |
-| Mã lần chạy dùng làm bằng chứng | thẻ, mốc base: ________ · prepared: ________ · after: ________ |
-| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | |
+| Commit ký tiêu chí | `1354c4d` (giống v1) |
+| Hash chốt cổng vòng 1 | `bd027656` (giống v1) |
+| Mã lần chạy dùng làm bằng chứng | thẻ S3, mốc base: `R-S3-before-20261119-170542-c84928` · prepared: `R-S3-prepared-20261119-170542-c84928` · after: `R-S3-after-20261119-170542-c84928` (grade `R-S3-grade-20261119-170542-c84928`, PASS-VISIBLE) |
+| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | Report in 'Không vượt trần kinh doanh / vận hành nào' và số kho đắt hơn làm tay là 0. Nhưng khối 'theo kho' của **bộ nền** vẫn ghi nhóm kho `?` (ticket `T-018`, đơn không có trong DB) 10.359đ/ticket, cao hơn làm tay 10.000đ ở cả ba mốc. `decision_rule` đã ký tính cả dòng này là vượt trần, nên bàn coi đây là dòng còn lại. Hàng chờ (0 ca ùn), chi phí (6.038đ), ROI (0,66), trần hoàn (80.000đ so với 1.000.000đ), pháp lý đều không vượt. |
 | Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Khối "theo kho và hãng" trong output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | |
-| Quyết định (khoanh một) | Tiếp tục · Thu hẹp · Cải tiến thêm · Dừng |
-| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | |
-| Bằng chứng 2 | |
-| Bằng chứng 3 | |
-| Khớp dòng nào trong `decision_rule` đã ký? | |
-| Nếu Thu hẹp: cắt kho nào / còn bao nhiêu phần trăm / mấy người trực, và ticket bị cắt đi đâu | |
-| Nếu Cải tiến thêm: giả thuyết cụ thể (nhánh nào của fault tree) + hạn | |
-| Nếu Dừng: bài học ghi lại | |
-| Ngày quyết định lại (trừ khi Dừng) | |
-| PIC ký | |
+| Quyết định (khoanh một) | Tiếp tục · **Thu hẹp** · Cải tiến thêm · Dừng |
+| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | `R-S3-after-20261119-170542-c84928` (thẻ, after): `pass_rate` 1,0 (≥ 0,93), `pass_k` 1,0 (≥ 0,86), hoàn sai 0đ, lỗi hãng oan 0, PII 0: đạt cả 5 chỉ số bắt buộc. Mốc base của thẻ: 0,25 · 900.000đ · 35 lỗi oan · PII 0; prepared: 0,5833 · 0đ · 10 lỗi oan · PII 0 |
+| Bằng chứng 2 | Bộ nền sau khi sửa `R-base-after-20261119-170127-c84928`: `pass_rate` 1,0, `pass_k` 1,0, hoàn sai 0đ, lỗi oan 0, PII 0; không có ca mới hỏng (`regression ✅`). Kinh doanh trên thẻ: chi phí 6.038đ ≤ 7.000đ, ROI 0,66 ≥ 0,4, 0 ca ùn, `escalation_rate` 0,3333 ≤ 0,35 |
+| Bằng chứng 3 | Khối 'theo kho' của bộ nền ở mốc after: nhóm `?` 10.359đ/ticket > 10.000đ làm tay; các kho khác CT 665đ, DN 4.646đ, HCM 3.683đ, HN 2.079đ. Trace `S3-42@11` ở `after`: `issue_refund` bị chuyển người với sự kiện `carrier_strike_cap` (MKD đã 2 lỗi), sổ cái và sổ lỗi hãng trống |
+| Khớp dòng nào trong `decision_rule` đã ký? | **Thu hẹp**: không rơi vào Dừng (ba chỉ số an toàn đều bằng 0, chi phí 6.038đ không vượt 10.000đ); còn đúng một điều kiện của Thu hẹp là 'report còn dòng vượt trần (kể cả một kho/hãng tốn hơn làm tay)', ứng với nhóm kho `?` của bộ nền. **Không chọn Tiếp tục** vì dòng đó đòi 'không còn dòng vượt trần nào (kể cả từng kho)'. Lưu ý: report tự kiểm tra ghi 'Được phép cân nhắc Tiếp tục' vì không đếm nhóm `?` là một kho; bàn đọc theo chữ của `decision_rule` đã ký nên giữ Thu hẹp, và Thu hẹp có lý do, có số nên là quyết định đạt |
+| Nếu Thu hẹp: cắt kho nào / còn bao nhiêu phần trăm / mấy người trực, và ticket bị cắt đi đâu | Cắt ticket mà đơn không có trong DB (nhóm kho `?`, khoảng 1/22 ≈ 4,5% ticket của bộ nền), còn ≈ 95,5%; giữ 1 người trực (6 ca/giờ). Ticket bị cắt về hàng làm tay của CSKH (NV-HANH). Cách thực hiện: `business.pilot_scope` = `{"mode": "warehouse", "warehouses": ["HN","HCM","DN","CT"]}`. **Chưa bật trong `operating_gates.json` ở lần chạy này** (độ phủ trong report vẫn 1,0); phải bật và chạy lại `lab10.grade` trước pilot, rồi đo lại độ phủ (kỳ vọng ≈ 0,95) |
+| Nếu Cải tiến thêm: giả thuyết cụ thể (nhánh nào của fault tree) + hạn | Không áp dụng |
+| Nếu Dừng: bài học ghi lại | Không áp dụng |
+| Ngày quyết định lại (trừ khi Dừng) | Sau khi team chấm chạy bài kiểm tra ẩn của thẻ S3, và sau 2 tuần chạy pilot đã thu hẹp (đo lại nhóm `?` với mẫu lớn hơn 5 lần chạy, tỉ lệ ticket có `delay_cause` trống theo hãng) |
+| PIC ký | Chờ nhóm xác nhận (cổng vận hành đã đặt PIC là `NV-TUNG`) |
 
 **Chỉ ở v2**
-- Quyết định đổi hay giữ so với v1? Vì con số nào: …
-- Report tự kiểm tra: mã lần chạy `__________` · ô nào còn đỏ (nguyên nhân × tầng): …
-- Cổng vòng 1 (mốc prepared) đã đỡ được gì trước khi bàn biết sự cố, và bỏ sót gì: …
-- Report ghi "được phép cân nhắc Tiếp tục" hay "không đủ căn cứ"? Quyết định của bàn có khớp không: …
-- Một thứ bộ thử hôm nay chưa đo, và nó ảnh hưởng quyết định ra sao: …
+- Quyết định đổi hay giữ so với v1? Vì con số nào: **Giữ Thu hẹp.** Sự cố S3 đã được xử lý (thẻ: 35 → 0 lỗi hãng oan, hoàn thiếu 667.000đ → 0, `pass_rate` 0,25 → 1,0), nhưng điều khiến v1 chọn Thu hẹp, nhóm kho `?` 10.359đ/ticket > 10.000đ làm tay, không đổi. Thẻ S3 còn làm tỉ lệ chuyển người tăng lên 0,3333 (sát ngưỡng 0,35) và chi phí lên 6.038đ (đã ở dải VÀNG).
+- Report tự kiểm tra: mã lần chạy `R-S3-grade-20261119-170542-c84928` · ô nào còn đỏ (nguyên nhân × tầng): không có ô nào đỏ ở 5 mục máy chạy được; mục 4 (hidden) chưa chạy vì máy không có bài kiểm tra ẩn. Còn hở (không đỏ nhưng chưa chứng minh): `delay_cause` do hãng nhập sai nhưng trông hợp lệ (data × hãng); bảng `policies` thiếu phiên bản mới (cổng chuyển người).
+- Cổng vòng 1 (mốc prepared) đã đỡ được gì trước khi bàn biết sự cố, và bỏ sót gì: Đỡ được hoàn sai 900.000đ → 0, lỗi hãng oan 35 → 10, PII 0, và chuyển người khoản 1,5 triệu (S3-04). Bỏ sót: không ghim phiên bản chính sách (hoàn thiếu 667.000đ) và không đếm lỗi theo hãng trong ngày (10 lỗi oan còn lại ở MKD).
+- Report ghi "được phép cân nhắc Tiếp tục" hay "không đủ căn cứ"? Quyết định của bàn có khớp không: Report ghi 'Được phép cân nhắc Tiếp tục'. Bàn chọn Thu hẹp, không khớp về chữ; lý do là nhóm kho `?` (xem C12, mục 'Khớp dòng nào'). 'Được phép cân nhắc' không phải bắt buộc chọn.
+- Một thứ bộ thử hôm nay chưa đo, và nó ảnh hưởng quyết định ra sao: Bài kiểm tra ẩn (đơn, khách, cách viết khác) và dữ liệu thật về `delay_cause` do hãng nhập. Nếu hãng ghi sai nguyên nhân thì cổng vẫn tin tracking, và quyết định Thu hẹp phải thu hẹp thêm theo hãng.
 
 **Ba dòng bắt buộc** (chép nguyên ba câu này sang `submission/submission.json`, mục `three_lines`)
-1. Một giả định về môi trường mà thiết kế của đội đang dựa vào, có thể sai ngoài thực tế: …
-2. Gate của đội chỉ GIẢM khả năng hay thực sự NGĂN được tác hại? Vì sao: …
-3. Vì data là mock, cần đo lại gì trong pilot thật trước Bước đánh giá 2: …
+1. Một giả định về môi trường mà thiết kế của đội đang dựa vào, có thể sai ngoài thực tế: Thiết kế giả định rằng trường `delay_cause` do hãng và tài xế nhập là đầy đủ và trung thực, và chính sách đang hiệu lực suy ra đúng từ ngày, nhưng thực tế hãng bị phạt có lợi khi để trống hoặc khai bão, nên cổng tin tracking vẫn có thể bị đánh lừa.
+2. Gate của đội chỉ GIẢM khả năng hay thực sự NGĂN được tác hại? Vì sao: Gate ngăn được hai nhánh (áp chính sách cũ, ghi lỗi hãng cho kiện bão hoặc nguyên nhân trống) vì cổng đọc nguồn sự thật chứ không đọc chữ khách; nhưng với lỗi hãng vượt trần trong ngày gate chỉ giảm tác hại tổng, vì chuyển cả khoản hoàn sang người nên tốn thêm chi phí (6.038đ/ticket).
+3. Vì data là mock, cần đo lại gì trong pilot thật trước Bước đánh giá 2: Đo lại tỉ lệ kiện có `delay_cause` trống hoặc sai theo từng hãng, số ca chạm trần 2 lỗi/hãng/ngày cùng chi phí và ROI khi ca chuyển người nhiều, và chi phí nhóm kho `?` với mẫu lớn hơn 5 lần chạy.
