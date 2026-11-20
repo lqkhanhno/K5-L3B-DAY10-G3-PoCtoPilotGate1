@@ -28,19 +28,23 @@ Mỗi thành viên tự viết một mục bên dưới (chép mẫu, đổi ti�
 
 ### Phần việc phụ trách
 
-Trưởng nhóm, phụ trách vận hành và pháp lý. Soạn mục tiêu đối soát và duyệt ca ở A1, tín hiệu lộ dữ liệu ở A2, HAZOP, checklist và runbook ở B4–B7. Đối chiếu danh sách thành viên với hồ sơ nộp.
+Trưởng nhóm và phụ trách vai Vận hành và pháp lý. Tôi phụ trách đối chiếu yêu cầu của bài với hồ sơ của nhóm, xây dựng phần mục tiêu đối soát và duyệt ca ở Phiếu A, rà tín hiệu lộ dữ liệu và các rủi ro liên quan đến bên thứ ba. Ở Phiếu B, tôi làm HAZOP mở rộng, checklist 9 nhóm việc, cổng `operations` và `legal`, runbook phần 1–3 và kế hoạch xử lý giờ cao điểm. Ở vòng sự cố S3, tôi tham gia đọc report, cập nhật risk register, checklist, runbook phần 4–5 và phần quyết định thu hẹp phạm vi pilot.
 
 ### Đóng góp cụ thể
 
-Đã dùng Codex để gộp nhánh, đối chiếu README, rà các chỗ mâu thuẫn giữa Phiếu A/B và config, và đồng bộ tên người phụ trách theo bảng thành viên.
+Tôi đã kiểm tra lại README, problem-set và CHECKPOINTS để bảo đảm các phần của nhóm đi đúng thứ tự. Tôi đối chiếu các con số trong `config/operating_gates.json` với `ops_facts` và `ops_limits`, gồm một người duyệt, công suất 6 ca/giờ, SLA 60 phút, ngưỡng cảnh báo 30 phút, kiểm mẫu 10% và thời hạn dừng tối đa 10 phút.
+
+Tôi điền và rà lại các nội dung vận hành, pháp lý trong Phiếu B: người chịu trách nhiệm, người duyệt, người giữ công tắc dừng, kênh báo tin, cách xử lý hàng chờ, cách tiếp nhận khiếu nại của hãng và các trường không được gửi ra bên thứ ba. Tôi cũng bổ sung việc kiểm tra `delay_cause` trước khi ghi lỗi cho hãng và lọc `customer_note`, `recipient_contact` khỏi payload gửi hãng.
+
+Sau khi nhận thẻ S3, tôi cùng nhóm phân tích việc chính sách REFUND-v4 đã có hiệu lực nhưng cờ `index_active` chưa cập nhật, nguyên nhân trễ có thể bị bỏ trống, và một hãng có thể nhận quá nhiều lỗi tự động trong một ngày. Tôi góp phần đưa ra quy trình chuyển người từ lỗi hãng thứ ba trong ngày, theo dõi hàng chờ và thu hẹp phạm vi nếu nhóm ticket không có đơn trong cơ sở dữ liệu có chi phí cao hơn làm tay.
 
 ### Bằng chứng
 
-Bản nháp vận hành ở commit `5ad6a40`. Xem Phiếu A mục A1–A2 và Phiếu B mục B4–B7.
+Các phần vận hành và pháp lý được ghi trong Phiếu A mục A1–A2, Phiếu B mục B4–B7.6 và Phiếu C mục C1, C3.5, C8, C10–C12. Bằng chứng chạy sau sự cố S3 gồm `R-S3-grade-20261119-172847-c84928`, trong đó report ghi `integrity`, `criteria`, `visible`, `regression` và `monitor` đều đạt. Sau sửa, thẻ S3 có `pass_rate = 1,0`, `wrongful_refund_vnd = 0`, `wrongful_carrier_faults = 0`, `pii_leaks = 0`, chi phí 6.038đ/ticket, ROI 0,66 và không có ca ùn.
 
 ### Exit ticket
 
-*(Lê Quốc Khánh tự điền sau buổi lab.)*
+Điều tôi rút ra là không thể chỉ nhìn vào việc model trả lời đúng hay sai. Cần kiểm cả người duyệt, hàng chờ, chi phí, nguồn dữ liệu và bên thứ ba bị ảnh hưởng. Với thẻ S3, cổng đã chặn được lỗi chính sách cũ và lỗi ghi hãng không có căn cứ, nhưng vẫn phải giữ quy trình kiểm tra đơn tồn tại trước khi đưa ticket vào trợ lý vì nhóm ticket đó có chi phí cao hơn làm tay. Nếu chạy pilot thật, tôi sẽ theo dõi thêm chất lượng `delay_cause` theo từng hãng và số ca chuyển người khi nhiều ticket cùng dồn vào một hãng.
 
 ## VuDinhThang-2A202603753
 
